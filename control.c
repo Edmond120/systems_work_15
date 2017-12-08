@@ -43,10 +43,19 @@ void flag_v(){//views story
 	}
 }
 void flag_r(){//removes everything
+	struct sembuf s;
+	s.sem_op = -1;
+	if(descriptor != -1){
+		semop(descriptor,&s,1);
+	}
 	if(access("story.txt",F_OK)){
-		printf("story can't be removed sincei it does not exist\n");
+		printf("story can't be removed since it does not exist\n");
 	}
 	else{
+		if(descriptor == -1){
+			printf("semaphore does not exist, but story does1?!?!\n");
+			return;
+		}
 		unlink("story.txt");
 		printf("story removed\n");
 	}
@@ -57,7 +66,6 @@ void flag_r(){//removes everything
 	else{
 		if(semctl(descriptor,0,IPC_RMID) == 0){
 			printf("semaphore removed\n");
-			return;
 		}
 		else{
 			printf("error removing semaphore\n");
