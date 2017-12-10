@@ -60,6 +60,8 @@ int write_to_story(char* line){
 
 int main(){
 
+	printf("\n ***Welcome To Edmond and Anish's Semaphone!***\n ***Waiting for Resources***\n\n");
+
 	//Down the semaphore
 	struct sembuf sb;
 	sb.sem_op = -1;

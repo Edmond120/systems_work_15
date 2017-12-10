@@ -11,4 +11,3 @@ main:
 clean:
 	rm main
 	rm control
-	rm story.txt
