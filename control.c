@@ -11,10 +11,10 @@
 
 int descriptor = -1;
 void flag_c(){//inits everything
-	int id = shmget(SHM,sizeof(int),600 | IPC_CREAT | IPC_EXCL);
+	int id = shmget(SHM,sizeof(int),0777 | IPC_CREAT | IPC_EXCL);
 	if(descriptor == -1 && access("story.txt",F_OK) && id != -1){
 		printf("shared memory created\n");
-		descriptor = semget(SEM,1,IPC_CREAT | 0600);
+		descriptor = semget(SEM,1,IPC_CREAT | 0777);
 		semctl(descriptor,0,SETVAL,1);
 		printf("semaphore created: %d\n",descriptor);
 		FILE * file = fopen("story.txt","w");
@@ -46,7 +46,7 @@ void flag_v(){//views story
 	}
 }
 void flag_r(){//removes everything
-	int id = shmget(SHM,sizeof(int),0600);
+	int id = shmget(SHM,sizeof(int),0777);
 	if(id == -1){
 		printf("shared memory can't be removed since it does not exist\n");
 	}
