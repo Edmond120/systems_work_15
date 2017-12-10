@@ -65,6 +65,8 @@ int main(){
 	//Down the semaphore
 	struct sembuf sb;
 	sb.sem_op = -1;
+	sb.sem_num = 0;
+	sb.sem_flg = SEM_UNDO;
 
 	//Get the semaphore
 	int semd = semget(SEM, 1, 0777);
