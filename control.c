@@ -47,7 +47,12 @@ void flag_v(){//views story
 }
 void flag_r(){//removes everything
 	printf("waiting for semaphore\n");
-	
+    struct sembuf buf;
+	buf.sem_op = -1;
+	buf.sem_num = 0;
+	buf.sem_flg = SEM_UNDO;
+	semop(descriptor,&buf,1);	
+	printf("done waiting\n");
 	int id = shmget(SHM,sizeof(int),0777);
 	if(id == -1){
 		printf("shared memory can't be removed since it does not exist\n");
