@@ -1,6 +1,7 @@
 #include <sys/types.h>
 #include <sys/ipc.h>
 #include <sys/sem.h>
+#include <sys/shm.h>
 #include <stdio.h>
 #include <stdlib.h>
 #include <ctype.h>
@@ -10,16 +11,18 @@
 
 int descriptor = -1;
 void flag_c(){//inits everything
-	if(descriptor == -1 && access("story.txt",F_OK)){
+	int id = shmget(SHM,sizeof(int),600 | IPC_CREAT | IPC_EXCL);
+	if(descriptor == -1 && access("story.txt",F_OK) && id != -1){
+		printf("shared memory created\n");
 		descriptor = semget(SEM,1,IPC_CREAT | 0600);
 		semctl(descriptor,0,SETVAL,1);
 		printf("semaphore created: %d\n",descriptor);
 		FILE * file = fopen("story.txt","w");
 		fclose(file);
-		printf("story created\n");
+		printf("story created\n");	
 	}
 	else{
-		printf("semaphore or story already exists\n");
+		printf("semaphore or story or shared memory already exists\n");
 		return;
 	}
 }
@@ -43,6 +46,14 @@ void flag_v(){//views story
 	}
 }
 void flag_r(){//removes everything
+	int id = shmget(SHM,sizeof(int),0600);
+	if(id == -1){
+		printf("shared memory can't be removed since it does not exist\n");
+	}
+	else{
+		shmctl(id,IPC_RMID,NULL);
+		printf("shared memory marked for removal\n");
+	}
 	struct sembuf s;
 	s.sem_op = -1;
 	if(descriptor != -1){
@@ -54,7 +65,6 @@ void flag_r(){//removes everything
 	else{
 		if(descriptor == -1){
 			printf("semaphore does not exist, but story does1?!?!\n");
-			return;
 		}
 		unlink("story.txt");
 		printf("story removed\n");
