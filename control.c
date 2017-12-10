@@ -46,6 +46,8 @@ void flag_v(){//views story
 	}
 }
 void flag_r(){//removes everything
+	printf("waiting for semaphore\n");
+	
 	int id = shmget(SHM,sizeof(int),0777);
 	if(id == -1){
 		printf("shared memory can't be removed since it does not exist\n");
@@ -66,6 +68,14 @@ void flag_r(){//removes everything
 		if(descriptor == -1){
 			printf("semaphore does not exist, but story does1?!?!\n");
 		}
+		FILE * story = fopen("story.txt","r");
+		int c;
+		printf("story\n--------------------------------\n");
+		while((c = fgetc(story)) != EOF){
+			putchar(c);
+		}
+		fclose(story);
+		printf("--------------------------------\n");
 		unlink("story.txt");
 		printf("story removed\n");
 	}
