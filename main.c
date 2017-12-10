@@ -7,6 +7,8 @@
 #include <sys/shm.h>
 #include <sys/ipc.h>
 #include <sys/types.h>
+#include <unistd.h>
+#include <fcntl.h>
 #include "keys.h"
 /*
 union semun {
@@ -23,8 +25,15 @@ char* read_from_story(int size){
 }
 
 int write_to_story(char* line){
-
-	return 0;
+	
+	int fd = open("story.txt", O_CREAT|O_APPEND|O_WRONLY, 0777);
+	char s[100];
+	printf("Line: %s\n", line);
+	strcpy(s, line);
+	//strcpy(s, line);
+	printf("S: %s\n", s);
+	write(fd, line, strlen(s));
+	return close(fd);
 }
 
 int main(){
@@ -46,5 +55,8 @@ int main(){
 	shmdt(&last_size);
 	sb.sem_op = 1;
 	semop(semd, &sb, 1);
+	return 0;
+	write_to_story("Hi\n");
+	write_to_story("This is a test\n");
 	return 0;
 }
