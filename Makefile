@@ -6,4 +6,9 @@ control:
 	gcc -o control control.c
 
 main:
-	gcc -o main main.c 
+	gcc -o main main.c
+
+clean:
+	rm main
+	rm control
+	rm story.txt

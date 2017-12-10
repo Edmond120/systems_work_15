@@ -9,7 +9,9 @@
 #include <sys/types.h>
 #include <unistd.h>
 #include <fcntl.h>
+#include <errno.h>
 #include "keys.h"
+
 /*
 union semun {
 
@@ -19,47 +21,63 @@ union semun {
 	struct seminfo *__buf;
 }; */
 
-char* read_from_story(int size){
+int print_error(int result){
+  if(result == -1){
+    printf("Error: %s\n", strerror(errno));
+    return -1;
+  }
+  return 0;
+}
 
-	return "Hello";
+char* read_from_story(int size){
+	int fd = open("story.txt", O_RDONLY, 0777);
+	if(print_error(fd)){
+		printf("\nBe sure to run ./control -c first\n");
+		return NULL;
+	}
+	int seek = lseek(fd, (-1 * size), SEEK_END);
+	if(print_error(seek)) return NULL;
+	char* c = (char*) calloc(size, sizeof(char));
+	int readd = read(fd, c, size);
+	if(print_error(readd)) return NULL;
+	return c;
 }
 
 int write_to_story(char* line){
 
-	int fd = open("story.txt", O_CREAT|O_APPEND|O_WRONLY, 0777);
-	char s[100];
-	printf("Line: %s\n", line);
+	int fd = open("story.txt", O_APPEND|O_WRONLY, 0777);
+	if(print_error(fd)){
+		printf("\nBe sure to run ./control -c first\n");
+		return -1;
+	}
+	char s[strlen(line) + 1];
+	//printf("Line: %s\n", line);
 	strcpy(s, line);
-	//strcpy(s, line);
-	printf("S: %s\n", s);
+	//printf("S: %s\n", s);
 	write(fd, line, strlen(s));
 	return close(fd);
 }
 
 int main(){
 
+	//Down the semaphore
 	struct sembuf sb;
 	sb.sem_op = -1;
 
-	printf("1\n");
-
+	//Get the semaphore
 	int semd = semget(SEM, 1, 0777);
+	if(print_error(semd)) return -1;
 	semop(semd, &sb, 1);
 
-  printf("2\n");
-
+	//get shared memory
 	int shmd = shmget(SHM, sizeof(int), 0777|IPC_CREAT);
-
-	printf("2.1  %d\n", shmd);
-
+	if(print_error(shmd)) return -1;
 	int* last_size_p = shmat(shmd, 0, 0);
 
-	printf("2.3  %d\n", *last_size_p);
-
+	//read correct number bytes (gets last line)
 	char* last_line = read_from_story(*last_size_p);
 
-	printf("3\n");
-
+	//Prints last line and prompts user to enter next line
 	printf("Last Line: %s\n\n", last_line);
 	printf("Enter the next line: ");
 	char next_line[200];
@@ -67,10 +85,10 @@ int main(){
 	*last_size_p = strlen(next_line);
 	write_to_story(next_line);
 
-	printf("4\n");
-
+	//Detatch Shared Memory
 	shmdt(&last_size_p);
 
+	//Up the semaphore
 	sb.sem_op = 1;
 	semop(semd, &sb, 1);
 	return 0;
